@@ -6,6 +6,7 @@ Repositório criado com o objetivo de desenvolver o back-end do projeto para o S
 
 ```bash
 ├───main                          # Principal base do projeto
+├───nexus                         # Código Back end relacionado ao framework Django
 ```
 
 ## Execução do projeto
