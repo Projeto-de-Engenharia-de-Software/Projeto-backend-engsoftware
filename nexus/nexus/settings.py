@@ -41,8 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "gestor",
     "pds",
-    "login",
-    "cadastro",
+    "accounts",
 ]
 
 MIDDLEWARE = [
