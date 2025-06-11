@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     "pds",
     "dashboard",
     "accounts",
+
+    "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 MIDDLEWARE = [
@@ -103,6 +106,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication', # Adicione esta linha
+        # 'rest_framework.authentication.SessionAuthentication', # Opcional: para autenticação de sessão
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated', # Padrão: só autenticados podem ver
+    ]
+}
 
 
 # Internationalization

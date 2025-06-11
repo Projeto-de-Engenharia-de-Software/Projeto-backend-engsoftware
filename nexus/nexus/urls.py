@@ -17,10 +17,26 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from rest_framework import routers
+from accounts.api_views import UserProfileView, RegistrationAPIView
+from dashboard.api_views import DadosMensaisRegiaoView, RegiaoView
+from rest_framework.authtoken import views as authtoken_views
 
+## Routers para API e troca de dados, com todos o serializers dos apps.
+router = routers.DefaultRouter()
+router.register(r'profiles', UserProfileView) 
+router.register(r'regioes', RegiaoView) 
+router.register(r'dados_mensais_regiao', DadosMensaisRegiaoView) 
 
 urlpatterns = [
+    ## admin - Accounts(Registros e logins) - dashboard
     path('admin/', admin.site.urls),
-    path('', views.home_view),
-    path('accounts/', include("accounts.urls")),
+    path('accounts/', include('accounts.urls')), # Suas URLs de login/registro
+    path('dashboard/', include('dashboard.urls')), # Suas URLs de dashboards
+
+    # URLs da API REST Framework
+    path('api/', include(router.urls)), # Inclui todas as URLs geradas pelo router, que tá lá em cima
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/auth/token/', authtoken_views.obtain_auth_token, name='obtain_auth_token'),
+    path('api/register/', RegistrationAPIView.as_view(), name='api_register'),
 ]
