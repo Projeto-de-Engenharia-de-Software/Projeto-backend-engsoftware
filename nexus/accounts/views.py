@@ -1,10 +1,14 @@
+from django.contrib.auth import authenticate, login as auth_login, logout
+from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
 from .forms import ProfileForm
 
+
+######################## SERIARIZAR ############################
+
 ## 1. Tela de cadastro de usuário
-# Cadastro 1
 def register(request):
     if request.method == 'POST':
         form = ProfileForm(request.POST)
@@ -16,19 +20,8 @@ def register(request):
         form = ProfileForm()
     return render(request, 'accounts/register.html', {'form': form})
 
-def cadastro_view(request):
-    return HttpResponse("<h1>Essa é a tela de cadastro do usuário")
-
-# Castro Com as telas mais avançadas
-def cadastro_advanced_view(request):
-    return HttpResponse("<h1>Essa é a tela de cadastro avançado do usuário")
 
 ## 2. Tela de Login
-# Tela de Login
-
-from django.contrib.auth import authenticate, login as auth_login, logout
-from django.contrib.auth.forms import AuthenticationForm
-
 def user_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -51,15 +44,19 @@ def user_login(request):
         form = AuthenticationForm()
     return render(request, 'accounts/login.html', {'form': form})
 
+######################## VIEWS ANTIGAS(Feitas mais pra debugar código msm :D) ############################
+
+def cadastro_view(request):
+    return HttpResponse("<h1>Essa é a tela de cadastro do usuário")
+
+def cadastro_advanced_view(request):
+    return HttpResponse("<h1>Essa é a tela de cadastro avançado do usuário")
+
 def user_logout(request):
     logout(request)
     messages.info(request, 'Você foi desconectado.')
-    return redirect('login') # Redirect to login after logout
+    return redirect('login')
 
-
-def login_view(request):
-    return HttpResponse("<h1>Essa é a tela de login do usuário</h1>")
-
-# Recuperar Senha
+## Recuperar Senha
 def recuperar_senha_view(request):
     return HttpResponse("<h1>Essa é a tela de recuperar senha por meio de login do usuário</h1>")
