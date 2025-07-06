@@ -22,7 +22,7 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = 'django-insecure-+-9z$so=*w+9fh%u$n8@3x2if#0m7fgan3gl_1&mlq5%+wod&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "pds",
     "dashboard",
     "accounts",
+    "equipes",
 
     "rest_framework",
     "rest_framework.authtoken",
