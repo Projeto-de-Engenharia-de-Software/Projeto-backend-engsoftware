@@ -37,23 +37,29 @@ python -m venv venv
 
    - No Windows:
 
+   CMD
    ```bash
-   python .\venv\Scripts\activate
+   .\venv\Scripts\activate
    ```
-
+   
+   PowerShell
+   ```bash
+   .\venv\Scripts\Activate.ps1
+   ```
+   
    - No Linux/macOS:
 
    ```bash
    source venv/Scripts/activate
    ```
 
-4. Com o ambiente virtual ativado, vá para a pasta principal do projeto(Nexus) e instale as dependências:
+3. Com o ambiente virtual ativado, vá para a pasta principal do projeto(Nexus) e instale as dependências:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-5. Para desativar o ambiente virtual quando terminar:
+5. Para desativar o ambiente virtual quando terminar de rodar o server:
 
 ```bash
 deactivate
