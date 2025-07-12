@@ -17,17 +17,17 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv()
+load_dotenv(override=True)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+-9z$so=*w+9fh%u$n8@3x2if#0m7fgan3gl_1&mlq5%+wod&'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['54.209.29.198', 'localhost']
 
 
 # Application definition
@@ -84,8 +84,17 @@ WSGI_APPLICATION = 'nexus.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'nexus_db',
+        'USER': 'nexus',
+        'PASSWORD': 'nexus_admin',
+        'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
+        'PORT': '3306',
+        'OPTIONS': {
+        'charset': 'utf8mb4',
+        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
+
     }
 }
 

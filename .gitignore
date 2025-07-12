@@ -64,3 +64,4 @@ htmlcov/
 
 # Outros // Pode tirar é mais opcional
 pdf
+*.pem
