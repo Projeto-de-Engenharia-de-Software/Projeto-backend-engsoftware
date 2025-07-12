@@ -1,11 +1,18 @@
-from django.urls import path, include
+from django.urls import path
 from . import views
 
+# O app_name é importante para o Django saber a que app estas URLs pertencem
+app_name = 'accounts'
 
 urlpatterns = [
-    # Tela de cadastro de usuário - Cadastro avançado - Login - Recuperar Senha
-    path('', views.register, name='register'),
-    path('2/', views.cadastro_advanced_view, name='home'),
-    path('login/', views.user_login, name='login'),
-    path('rec-senha/', views.recuperar_senha_view, name='password_reset'),
+    # A página inicial de registo, que dá as opções
+    path('register/', views.register_options_view, name='register_options'),
+    
+    # As rotas para os formulários de registo específicos
+    path('register/gestor/', views.register_gestor_view, name='register_gestor'),
+    path('register/profissional/', views.register_profissional_view, name='register_profissional'),
+    
+    # As rotas de login e logout
+    path('login/', views.user_login_view, name='login'),
+    path('logout/', views.user_logout_view, name='logout'),
 ]

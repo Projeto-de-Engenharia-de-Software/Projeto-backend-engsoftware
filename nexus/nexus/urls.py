@@ -18,13 +18,17 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from rest_framework import routers
-from accounts.api_views import UserProfileView, RegistrationAPIView
+from accounts.api_views import GestorViewSet, ProfissionalSaudeViewSet, UnidadeSaudeViewSet, UserProfileViewSet, RegistrationAPIView
 from dashboard.api_views import DadosMensaisRegiaoView, RegiaoView
 from rest_framework.authtoken import views as authtoken_views
 
+
 ## Routers para API e troca de dados, com todos o serializers dos apps.
 router = routers.DefaultRouter()
-router.register(r'profiles', UserProfileView) 
+router.register(r'unidades-saude', UnidadeSaudeViewSet, basename='unidade-saude')
+router.register(r'gestores', GestorViewSet, basename='gestor')
+router.register(r'profissionais-saude', ProfissionalSaudeViewSet, basename='profissional-saude')
+router.register(r'profiles', UserProfileViewSet, basename='user-profile')
 router.register(r'regioes', RegiaoView) 
 router.register(r'dados_mensais_regiao', DadosMensaisRegiaoView) 
 
@@ -33,7 +37,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')), # Suas URLs de login/registro
     path('dashboard/', include('dashboard.urls')), # Suas URLs de dashboards
-    path ('equipes/', include('equipes.urls')),
 
     # URLs da API REST Framework
     path('api/', include(router.urls)), # Inclui todas as URLs geradas pelo router, que tá lá em cima

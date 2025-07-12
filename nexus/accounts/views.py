@@ -1,62 +1,93 @@
-from django.contrib.auth import authenticate, login as auth_login, logout
-from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.contrib.auth import login as auth_login, authenticate, logout
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from .forms import ProfileForm
+from .forms import GestorCreationForm, ProfissionalSaudeCreationForm
 
+def register_options_view(request):
+    """
+    View que mostra uma página com as duas opções de registo:
+    "Sou um Gestor" e "Sou um Profissional de Saúde".
+    """
+    return render(request, 'accounts/register_options.html')
 
-######################## SERIARIZAR ############################
-
-## 1. Tela de cadastro de usuário
-def register(request):
+def register_gestor_view(request):
+    """
+    View para o formulário de registo de um Gestor.
+    """
     if request.method == 'POST':
-        form = ProfileForm(request.POST)
+        form = GestorCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Cadastro realizado com sucesso! Faça login para continuar.')
-            return redirect('login') # Redirect to login page
+            user = form.save()
+            auth_login(request, user)  # Faz o login do utilizador automaticamente após o registo
+            messages.success(request, 'Registo como Gestor realizado com sucesso!')
+            return redirect('dashboard_gestor')  # Redireciona para o dashboard do gestor
     else:
-        form = ProfileForm()
-    return render(request, 'accounts/register.html', {'form': form})
+        form = GestorCreationForm()
+    
+    context = {
+        'form': form,
+        'user_type': 'Gestor'
+    }
+    return render(request, 'accounts/register_form.html', context)
 
+def register_profissional_view(request):
+    """
+    View para o formulário de registo de um Profissional de Saúde.
+    """
+    if request.method == 'POST':
+        form = ProfissionalSaudeCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            messages.success(request, 'Registo como Profissional de Saúde realizado com sucesso!')
+            return redirect('dashboard_profissional')  # Redireciona para o dashboard do profissional
+    else:
+        form = ProfissionalSaudeCreationForm()
+        
+    context = {
+        'form': form,
+        'user_type': 'Profissional de Saúde'
+    }
+    return render(request, 'accounts/register_form.html', context)
 
-## 2. Tela de Login
-def user_login(request):
+def user_login_view(request):
+    """
+    View para o login de utilizadores. Aceita username ou email.
+    """
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
+            # O nosso backend personalizado trata de verificar por username ou email
             user = authenticate(username=username, password=password)
             if user is not None:
                 auth_login(request, user)
-                messages.success(request, f'Bem-vindo, {user.profile.nome_completo}!')
-                if user.profile.perfil == 'gestor':
-                    return redirect('home')
-                elif user.profile.perfil == 'profisional':
-                    return redirect('pds')  
+                
+                # Verifica o tipo de utilizador e redireciona para a página correta
+                if hasattr(user, 'gestor'):
+                    messages.success(request, f'Bem-vindo, Gestor {user.nome_completo}!')
+                    return redirect('dashboard_gestor')
+                elif hasattr(user, 'profissionalsaude'):
+                    messages.success(request, f'Bem-vindo, {user.nome_completo}!')
+                    return redirect('dashboard_profissional')
+                else:
+                    # Para superutilizadores que não são nem gestores nem profissionais
+                    messages.success(request, f'Bem-vindo, {user.username}!')
+                    return redirect('admin:index')
             else:
-                messages.error(request, 'Email ou senha inválidos.')
+                messages.error(request, 'Nome de utilizador/email ou senha inválidos.')
         else:
-            messages.error(request, 'Email ou senha inválidos.')
+            messages.error(request, 'Nome de utilizador/email ou senha inválidos.')
     else:
         form = AuthenticationForm()
     return render(request, 'accounts/login.html', {'form': form})
 
-######################## VIEWS ANTIGAS(Feitas mais pra debugar código msm :D) ############################
-
-def cadastro_view(request):
-    return HttpResponse("<h1>Essa é a tela de cadastro do usuário")
-
-def cadastro_advanced_view(request):
-    return HttpResponse("<h1>Essa é a tela de cadastro avançado do usuário")
-
-def user_logout(request):
+def user_logout_view(request):
+    """
+    View para fazer o logout do utilizador.
+    """
     logout(request)
-    messages.info(request, 'Você foi desconectado.')
+    messages.info(request, 'Você foi desconectado com sucesso.')
     return redirect('login')
-
-## Recuperar Senha
-def recuperar_senha_view(request):
-    return HttpResponse("<h1>Essa é a tela de recuperar senha por meio de login do usuário</h1>")

@@ -1,95 +1,68 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from .models import Profile
+from .models import Gestor, ProfissionalSaude, UnidadeSaude
 
-User = get_user_model() 
-
-############################ SERIALIZAR OS USUÁRIOS ############################
-
-class UserSerializer(serializers.ModelSerializer):
-
+class UnidadeSaudeSerializer(serializers.ModelSerializer):
+    """
+    Serializer para o modelo UnidadeSaude.
+    """
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email']
+        model = UnidadeSaude
+        fields = ['id', 'nome', 'endereco']
 
+class GestorSerializer(serializers.ModelSerializer):
+    """
+    Serializer para o modelo Gestor.
+    """
+    # O campo 'password' é write-only para não ser exposto em GET requests.
+    password = serializers.CharField(write_only=True)
 
-class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-
-    class Meta:
-        model = Profile
-        fields = ['id', 'user', 'nome_completo', 'perfil', 'unidade_saude', 'especialidade', 'data_criacao']
-
-
-
-######################## SERIARIZAR OS FORMULÁRIOS PARA CADASTRO ############################
-
-# Serializer para Cadastro
-class UserRegistrationSerializer(serializers.Serializer):
-    # Campos que vêm diretamente do modelo User
-    username = serializers.CharField(max_length=150)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
-    password_confirmacao = serializers.CharField(write_only=True, style={'input_type': 'password'})
-
-    # Campos que vêm do modelo Profile
-    nome_completo = serializers.CharField(max_length=100)
-    perfil = serializers.ChoiceField(choices=Profile.PERFIL_CHOICES)
-    unidade_saude = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    especialidade = serializers.CharField(max_length=100, required=False, allow_blank=True)
-
-    # Etapa de Validação 
-    def validate(self, data):
-        # 1. Validação de senhas
-        if data['password'] != data['password_confirmacao']:
-            raise serializers.ValidationError({"password_confirmacao": "As senhas não coincidem."})
-        
-        # 2. Validação de unicidade de username (usando o modelo ativo)
-        if User.objects.filter(username=data['username']).exists():
-            raise serializers.ValidationError({"username": "Este nome de usuário já está em uso."})
-        
-        # 3. Validação de unicidade de email (usando o modelo ativo)
-        if User.objects.filter(email=data['email']).exists():
-            raise serializers.ValidationError({"email": "Este email já está cadastrado."})
-
-        # 4. Validação de campos condicionais (unidade_saude e especialidade para 'profissional')
-        if data['perfil'] == 'profissional':
-            if not data.get('unidade_saude'):
-                raise serializers.ValidationError({"unidade_saude": "Profissionais de saúde devem informar a unidade de saúde."})
-            if not data.get('especialidade'):
-                raise serializers.ValidationError({"especialidade": "Profissionais de saúde devem informar a especialidade."})
-            
-        elif data['perfil'] == 'gestor':
-            # 4.1 Limpar ou garantir que são None para gestores se o modelo não permitir blank/null
-            data['unidade_saude'] = "" 
-            data['especialidade'] = "" 
-            
-        return data
-
-    # Etapa de Criação do Usuário
     def create(self, validated_data):
-        # Remove a confirmação de senha
-        validated_data.pop('password_confirmacao') 
-        
-        # 1. Extrai os dados do Profile para usar APÓS a criação do User
-        profile_data = {
-            'nome_completo': validated_data.pop('nome_completo'),
-            'perfil': validated_data.pop('perfil'),
-            'unidade_saude': validated_data.pop('unidade_saude'),
-            'especialidade': validated_data.pop('especialidade'),
-        }
-        
-        # 2. Cria os dados validados de usuários
-        user = User.objects.create_user(**validated_data) 
-
-        # 2.1 Persiste os mesmos dados em Perfil também, com características a mais
-        profile = user.profile
-        profile.nome_completo = profile_data['nome_completo']
-        profile.perfil = profile_data['perfil']
-        profile.unidade_saude = profile_data['unidade_saude']
-        profile.especialidade = profile_data['especialidade']
-        profile.save()
-        
+        # Sobrescreve o método create para lidar com a password corretamente.
+        user = Gestor.objects.create_user(**validated_data)
         return user
 
+    class Meta:
+        model = Gestor
+        # Lista de campos a serem incluídos na API
+        fields = ['id', 'username', 'email', 'nome_completo', 'orgao', 'password']
+        # Define campos que não devem ser expostos ao ler dados
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
+class ProfissionalSaudeSerializer(serializers.ModelSerializer):
+    """
+    Serializer para o modelo Profissional de Saúde.
+    """
+    password = serializers.CharField(write_only=True)
+    # Inclui o serializer de UnidadeSaude para mostrar os detalhes das unidades
+    unidades_saude = UnidadeSaudeSerializer(many=True, read_only=True)
+    # Campo para receber os IDs das unidades ao criar/atualizar
+    unidades_saude_ids = serializers.PrimaryKeyRelatedField(
+        many=True, 
+        write_only=True, 
+        queryset=UnidadeSaude.objects.all(), 
+        source='unidades_saude'
+    )
+
+    def create(self, validated_data):
+        user = ProfissionalSaude.objects.create_user(**validated_data)
+        return user
+
+    def validate_unidades_saude_ids(self, value):
+        """
+        Validação para o limite de 2 unidades de saúde na API.
+        """
+        if len(value) > 2:
+            raise serializers.ValidationError("Um profissional de saúde não pode estar associado a mais de 2 unidades de saúde.")
+        return value
+
+    class Meta:
+        model = ProfissionalSaude
+        fields = [
+            'id', 'username', 'email', 'nome_completo', 'especialidade', 
+            'unidades_saude', 'unidades_saude_ids', 'password'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }

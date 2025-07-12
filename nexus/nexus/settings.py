@@ -27,8 +27,9 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['54.209.29.198', 'localhost']
+ALLOWED_HOSTS = ['54.209.29.198', 'localhost', '127.0.0.1']
 
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Application definition
 
@@ -43,7 +44,6 @@ INSTALLED_APPS = [
     "pds",
     "dashboard",
     "accounts",
-    "equipes",
 
     "rest_framework",
     "rest_framework.authtoken",
@@ -131,7 +131,7 @@ REST_FRAMEWORK = {
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'UTC'
 
