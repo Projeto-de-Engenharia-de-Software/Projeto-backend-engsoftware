@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: nexus_db
+      MYSQL_ROOT_PASSWORD: root_senha
+      MYSQL_USER: nexus
+      MYSQL_PASSWORD: nexus_admin
+    ports:
+      - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/nexus
+    ports:
+      - '8000:8000'
+    environment:
+      DATABASE_HOST: db
+      
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

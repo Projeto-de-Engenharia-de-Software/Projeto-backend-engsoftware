@@ -1,0 +1,21 @@
+FROM python:3.11-alpine
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apk update && apk add --no-cache \
+    build-base \
+    mariadb-dev \
+    pkgconfig
+
+WORKDIR /nexus
+
+COPY requirements.txt /nexus/
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["python", "manage.py",  "runserver", "0.0.0.0:8000"]
