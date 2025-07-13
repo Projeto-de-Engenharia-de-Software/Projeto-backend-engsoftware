@@ -1,35 +1,47 @@
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from .models import Regiao, DadosMensaisRegiao
-from .serializers import RegiaoSerializer, DadosMensaisRegiaoSerializer
+from .models import RegistroViolencia
+from .serializers import GestorRegistroViolenciaSerializer, ProfissionalRegistroViolenciaSerializer
 
-# Requisição de API focada para a análise da Região
-class RegiaoView(viewsets.ReadOnlyModelViewSet):
-    queryset = Regiao.objects.all()
-    serializer_class = RegiaoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+############################ PERMISSÃO DE VISUALIZAR DADOS ############################
 
-# Requisição de API focada para a análise dos dados Mensais de Cada Região
-class DadosMensaisRegiaoView(viewsets.ReadOnlyModelViewSet):
-    queryset = DadosMensaisRegiao.objects.all()
-    serializer_class = DadosMensaisRegiaoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# Permissão personalizada para permitir acesso apenas a usuários com perfil 'gestor'.
+class IsGestor(permissions.BasePermission):
 
-    # 1. Relação de Filtragem
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.profile.perfil == 'gestor'
+
+# Permissão personalizada para permitir acesso apenas a usuários com perfil 'profissional'.
+class IsProfissional(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.profile.perfil == 'profissional'
+
+
+class RegistroViolenciaViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint que permite visualizar os registros de violência.
+    - Gestores: podem ver todos os dados.
+    - Profissionais: podem ver apenas dados específicos.
+    """
+    permission_classes = [IsGestor | IsProfissional]
+
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # 1.1 Filtros de Região
-        regiao_id = self.request.query_params.get('regiao_id')
-        if regiao_id:
-            queryset = queryset.filter(regiao_id=regiao_id)
-        # 1.2 Filtros de Ano
-        ano = self.request.query_params.get('ano')
-        if ano:
-            queryset = queryset.filter(ano=ano)
-        # 1.3 Filtros de Mês
-        mes = self.request.query_params.get('mes')
-        if mes:
-            queryset = queryset.filter(mes=mes)
+        user = self.request.user
 
-        return queryset.order_by('regiao__nome', 'ano', 'mes')
+        if user.profile.perfil == 'gestor' or user.profile.perfil == 'profissional':
+            return RegistroViolencia.objects.all().order_by('-ano')
+
+        return RegistroViolencia.objects.none()
+    
+
+    def get_serializer_class(self):
+        user = self.request.user
+
+        if user.profile.perfil == 'gestor':
+            return GestorRegistroViolenciaSerializer
+        
+        elif user.profile.perfil == 'profissional':
+            # Para profissionais, usa o serializer com campos limitados
+            return ProfissionalRegistroViolenciaSerializer
+        
+        return super().get_serializer_class()

@@ -1,20 +1,30 @@
 from rest_framework import serializers
-from .models import DadosMensaisRegiao, Regiao
+from .models import RegistroViolencia
 
-############################ SERIALIZAR A REGIÃO ############################
-class RegiaoSerializer(serializers.ModelSerializer):
-
+class GestorRegistroViolenciaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Regiao
-        fields = ['id', 'nome', 'total_anual_csv']
+        model = RegistroViolencia
+        fields = '__all__'
 
-############################ SERIALIZAR OS DADOS MENSAIS DE CADA REGIÃO ############################
 
-class DadosMensaisRegiaoSerializer(serializers.ModelSerializer):
-    regiao = RegiaoSerializer(read_only=True)
-
+# Serializer para PROFISSIONAIS (mostra apenas os campos selecionados)
+class ProfissionalRegistroViolenciaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DadosMensaisRegiao
-        fields = ['id', 'regiao', 'ano', 'mes', 'valor']
+        model = RegistroViolencia
+        fields = [
+            'ano',
+            'id_municip',
+            'dt_ocor',
+            'dt_nasc',
+            'cs_sexo',
+            'cs_raca',
+            'id_munic_resi',
+            'id_mn_ocor',
+            'local_ocor',
+            'local_espec',
+            'out_vezes'
+        ]
+
+
 
     

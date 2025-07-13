@@ -18,22 +18,21 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from accounts.api_views import UserProfileAPIView, RegistrationAPIView, UserUpdateAPIView, UserDeleteAPIView
-from dashboard.api_views import DadosMensaisRegiaoView, RegiaoView
+from dashboard.api_views import RegistroViolenciaViewSet
 from equipes.api_views import EquipeViewSet
 from rest_framework.authtoken import views as authtoken_views
 
 ## Routers para API e troca de dados, com todos o serializers dos apps.
 router = routers.DefaultRouter()
 router.register(r'profiles', UserProfileAPIView, basename='profile') 
-router.register(r'regioes', RegiaoView) 
-router.register(r'dados_mensais_regiao', DadosMensaisRegiaoView)
+router.register(r'registro-violencia', RegistroViolenciaViewSet, basename='registro-violencia')
 router.register(r'equipes', EquipeViewSet, basename='equipe')
 
 urlpatterns = [
     ## admin - Accounts(Registros e logins) - dashboard
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')), # Suas URLs de login/registro
-    path('dashboard/', include('dashboard.urls')), # Suas URLs de dashboards
+    path('accounts/', include('accounts.urls')), 
+    path('dashboard/', include('dashboard.urls')), 
     path ('equipes/', include('equipes.urls')),
 
     # URLs da API REST Framework
