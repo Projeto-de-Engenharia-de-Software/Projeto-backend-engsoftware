@@ -17,14 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from accounts.api_views import UserProfileView, RegistrationAPIView
+from accounts.api_views import UserProfileAPIView, RegistrationAPIView, UserUpdateAPIView, UserDeleteAPIView
 from dashboard.api_views import DadosMensaisRegiaoView, RegiaoView
 from equipes.api_views import EquipeViewSet
 from rest_framework.authtoken import views as authtoken_views
 
 ## Routers para API e troca de dados, com todos o serializers dos apps.
 router = routers.DefaultRouter()
-router.register(r'profiles', UserProfileView) 
+router.register(r'profiles', UserProfileAPIView, basename='profile') 
 router.register(r'regioes', RegiaoView) 
 router.register(r'dados_mensais_regiao', DadosMensaisRegiaoView)
 router.register(r'equipes', EquipeViewSet, basename='equipe')
@@ -41,4 +41,6 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/auth/token/', authtoken_views.obtain_auth_token, name='obtain_auth_token'),
     path('api/register/', RegistrationAPIView.as_view(), name='api_register'),
+    path('api/profile/update/', UserUpdateAPIView.as_view(), name='api_profile_update'),
+    path('api/profile/delete/', UserDeleteAPIView.as_view(), name='api_profile_delete'),
 ]
