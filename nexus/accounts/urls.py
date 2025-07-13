@@ -8,4 +8,7 @@ urlpatterns = [
     path('2/', views.cadastro_advanced_view, name='home'),
     path('login/', views.user_login, name='login'),
     path('rec-senha/', views.recuperar_senha_view, name='password_reset'),
+    path('perfil/', views.editar_perfil, name='editar_perfil'),
+    path('logout/', views.user_logout, name='logout'),
+    path('delete-account/', views.delete_account, name='deletar_conta'),
 ]
