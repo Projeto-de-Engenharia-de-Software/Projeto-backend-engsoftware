@@ -1,25 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from accounts.models import Profile
+from accounts.serializers import UserSerializer, ProfileSerializer
 from .models import Equipe
 
-class UserSerializer(serializers.ModelSerializer):
-    """
-    Serializer simples para exibir informações básicas do usuário (gestor e profissionais).
-    """
-    class Meta:
-        model = User 
-        fields = ['id', 'username', 'email']
-
-class ProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer para o modelo Profile, que inclui informações adicionais do usuário.
-    """
-    user = UserSerializer(read_only=True)
-
-    class Meta:
-        model = Profile
-        fields = ['id', 'nome_completo', 'unidade_saude', 'especialidade']
 
 class EquipeSerializer(serializers.ModelSerializer):
     """
@@ -28,7 +11,7 @@ class EquipeSerializer(serializers.ModelSerializer):
     Isso substitui a construção manual do dicionário na sua view 'equipes_detalhe'.
     """
     gestor = UserSerializer(read_only=True)
-    profissionais = ProfileSerializer(many=True, read_only=True)
+    profissionais = UserSerializer(many=True, read_only=True)
 
     class Meta:
         model = Equipe

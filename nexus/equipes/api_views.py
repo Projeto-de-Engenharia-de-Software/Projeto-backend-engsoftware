@@ -52,6 +52,24 @@ class EquipeViewSet(viewsets.ModelViewSet):
             Equipe.criar_equipe(nome=serializer.validated_data.get('nome'), gestor=self.request.user)
         except ValidationError as e:
             raise serializers.ValidationError(str(e))
+    
+    
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Função que remove uma equipe.
+        Ela chama o método do modelo para remover a equipe, garantindo que somente o gestor possa removê-la.
+        """
+        equipe = self.get_object()
+
+        try:
+            # com as validações do modelo, removendo a equipe
+            Equipe.remover_equipe(equipe_id=equipe.id, usuario_solicitante=request.user)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ValidationError as e:
+            # Caso o método do modelo tenha alguma outra validação que falhe
+            return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
