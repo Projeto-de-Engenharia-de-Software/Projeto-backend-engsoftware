@@ -4,13 +4,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from .models import Profile
-from .serializers import ProfileSerializer, UserRegistrationSerializer
+from .serializers import ProfileSerializer, UserRegistrationSerializer, UserUpdateSerializer
 
 # Obtém o modelo de usuário ativo (User padrão)
 User = get_user_model() 
 
 # Requisição de API focada para o Perfil criado
-class UserProfileView(viewsets.ReadOnlyModelViewSet): 
+class UserProfileAPIView(viewsets.ReadOnlyModelViewSet): 
     queryset = Profile.objects.all() # Retorna todos os perfis
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticated] # Somente usuários autenticados podem ver
@@ -34,5 +34,33 @@ class RegistrationAPIView(generics.CreateAPIView):
         
         return Response({"message": "Usuário cadastrado com sucesso!"}, status=status.HTTP_201_CREATED)
 
+# View específica para Atualização de Perfis/Usuários
+class UserUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = UserUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user  # Retorna o usuário logado
+
+    def put(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_object(), data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response({"message": "Perfil atualizado com sucesso!"}, status=status.HTTP_200_OK)
+
+
+# View específica para a Deleção de Usuários
+class UserDeleteAPIView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"message": "Usuário removido com sucesso."}, status=status.HTTP_204_NO_CONTENT)
+    
 
     

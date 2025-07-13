@@ -29,7 +29,7 @@ class ProfileForm(forms.ModelForm):
             raise forms.ValidationError("Este email já está cadastrado.")
         return email
 
-    # Conferir a questão da senha, e também o gestor com seus campos opcionais
+    # Conferir se as senhas coincidem e validar campos condicionais
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
@@ -39,43 +39,39 @@ class ProfileForm(forms.ModelForm):
             self.add_error('password_confirmacao', "As senhas não coincidem.")
 
         perfil = cleaned_data.get('perfil')
-        # Referenciando o campo com o nome correto: unidade_saude
+
         unidade_saude = cleaned_data.get('unidade_saude') 
         especialidade = cleaned_data.get('especialidade')
 
+        # Validação condicional para profissionais de saúde
         if perfil == 'profissional':
-            if not unidade_saude: # Usa o nome correto
+            if not unidade_saude: 
                 self.add_error('unidade_saude', "Profissionais de saúde devem informar a unidade de saúde.")
             if not especialidade:
                 self.add_error('especialidade', "Profissionais de saúde devem informar a especialidade.")
         elif perfil == 'gestor':
-            # CORREÇÃO: Usar o nome correto do campo
+            # Gestores não precisam desses campos, então podemos limpar
             cleaned_data['unidade_saude'] = None 
             cleaned_data['especialidade'] = None
         return cleaned_data
 
     def save(self, commit=True):
-        # 1. Cria a instância do User (o que é manipulado por Meta.model = User)
+
         user = super().save(commit=False)
         
-        # 2. Define a senha no objeto User (essencial para hashing)
+
         user.set_password(self.cleaned_data['password'])
         
         if commit:
-            # 3. Salva o User no DB. Esta linha (user.save()) DISPARA o sinal post_save,
-            #    que automaticamente CRIA o Profile básico (com o user_id) para este User.
             user.save() 
             
-            # 4. AGORA, ACESSE o objeto Profile que acabou de ser criado pelo sinal
-            #    E PREENCHA seus campos com os dados do formulário.
-            profile = user.profile # <-- ESSA É A LINHA CHAVE: Acessa o Profile EXISTENTE
+            profile = user.profile
             
             profile.nome_completo = self.cleaned_data['nome_completo']
             profile.perfil = self.cleaned_data['perfil']
             profile.unidade_saude = self.cleaned_data['unidade_saude']
             profile.especialidade = self.cleaned_data['especialidade']
             
-            # 5. Salva o Profile, atualizando-o com os dados do formulário
             profile.save() 
 
         return user

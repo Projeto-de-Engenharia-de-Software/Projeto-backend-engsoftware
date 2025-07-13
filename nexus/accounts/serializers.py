@@ -93,3 +93,54 @@ class UserRegistrationSerializer(serializers.Serializer):
         return user
 
 
+# Serializer para Atualização de Usuário e Perfil em conjunto
+class UserUpdateSerializer(serializers.Serializer):
+    nome_completo = serializers.CharField(max_length=100, required=False)
+    email = serializers.EmailField(required=False)
+    unidade_saude = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    especialidade = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+    def validate_email(self, value):
+        """
+        Garante que o novo email não esteja em uso por OUTRO usuário.
+        """
+        user = self.context['request'].user
+        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("Este email já está cadastrado em outra conta.")
+        return value
+
+    def validate(self, data):
+        """
+        Validação condicional para profissionais de saúde.
+        """
+        user = self.context['request'].user
+        # Se o perfil for de profissional, os campos são obrigatórios.
+
+        if user.profile.perfil == 'profissional': 
+            # Verifica o valor que está chegando ou o valor que já existe
+            if not (data.get('unidade_saude') or user.profile.unidade_saude):
+                raise serializers.ValidationError({"unidade_saude": "Profissionais de saúde devem informar a unidade de saúde."})
+            if not (data.get('especialidade') or user.profile.especialidade):
+                raise serializers.ValidationError({"especialidade": "Profissionais de saúde devem informar a especialidade."})
+        return data
+
+    def update(self, instance, validated_data):
+        profile_data = {
+            'nome_completo': validated_data.get('nome_completo', instance.profile.nome_completo),
+            'unidade_saude': validated_data.get('unidade_saude', instance.profile.unidade_saude),
+            'specialidade': validated_data.get('especialidade', instance.profile.especialidade)
+        }
+
+        # Atualiza o campo de email no modelo User
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+
+        # Atualiza os dados do Profile
+        profile = instance.profile
+        profile.nome_completo = profile_data['nome_completo']
+        profile.unidade_saude = profile_data['unidade_saude']
+        profile.especialidade = profile_data['specialidade']
+        profile.save()
+
+        return instance
+
