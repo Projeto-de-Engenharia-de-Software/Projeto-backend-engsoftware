@@ -3,8 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
-from .forms import ProfileForm
-from .forms import ProfileForm
+from .forms import ProfileForm, ProfileUpdateForm
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 
