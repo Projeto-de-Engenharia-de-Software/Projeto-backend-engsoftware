@@ -128,7 +128,7 @@ class UserUpdateSerializer(serializers.Serializer):
         profile_data = {
             'nome_completo': validated_data.get('nome_completo', instance.profile.nome_completo),
             'unidade_saude': validated_data.get('unidade_saude', instance.profile.unidade_saude),
-            'specialidade': validated_data.get('especialidade', instance.profile.especialidade)
+            'especialidade': validated_data.get('especialidade', instance.profile.especialidade)
         }
 
         # Atualiza o campo de email no modelo User
@@ -139,7 +139,7 @@ class UserUpdateSerializer(serializers.Serializer):
         profile = instance.profile
         profile.nome_completo = profile_data['nome_completo']
         profile.unidade_saude = profile_data['unidade_saude']
-        profile.especialidade = profile_data['specialidade']
+        profile.especialidade = profile_data['especialidade']
         profile.save()
 
         return instance
