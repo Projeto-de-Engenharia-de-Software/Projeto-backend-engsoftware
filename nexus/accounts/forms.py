@@ -79,4 +79,3 @@ class ProfileForm(forms.ModelForm):
             profile.save() 
 
         return user
-

@@ -1,0 +1,20 @@
+<!-- equipes/templates/equipes/home.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Minhas Equipes</title>
+</head>
+<body>
+    <h1>Minhas Equipes</h1>
+    {% if equipes %}
+        <ul>
+            {% for equipe in equipes %}
+                <li>{{ equipe.nome }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Você ainda não participa de nenhuma equipe.</p>
+    {% endif %}
+</body>
+</html>

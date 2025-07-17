@@ -1,83 +1,119 @@
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponseForbidden
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Equipe
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
-# Listar equipes do usuário
+from .models import Equipe
+from .forms import EquipeForm, EditarEquipeForm
+
+
+######################### TELAS DE EQUIPE ############################
+
+## 1. Tela inicial - lista de equipes do usuário logado
 @login_required
 def equipes_home(request):
     user = request.user
     equipes = Equipe.objects.filter(profissionais=user) | Equipe.objects.filter(gestor=user)
-    equipes = equipes.distinct().values('id', 'nome', 'gestor__username')
-    return JsonResponse({'equipes': list(equipes)})
+    equipes = equipes.distinct()
+    return render(request, 'equipes/home_equipes.html', {'equipes': equipes})
 
-# Criar nova equipe (gestor)
+
+## 2. Cadastro de nova equipe
 @login_required
-def equipes_cadastrar(request):
-    if request.method != 'POST':
-        return JsonResponse({'erro': 'Use o método POST com campo "nome".'}, status=400)
+def cria_equipes(request):
+    if request.method == 'POST':
+        form = EquipeForm(request.POST)
+        if form.is_valid():
+            equipe = form.save(commit=False) # Instancia equipe sem salvar ainda no banco
+            equipe.gestor = request.user # Usuario atual como gestor da equipe
+            equipe.save()
+            messages.success(request, 'Equipe criada com sucesso!')
+            return redirect('home_equipes')
+    else:
+        form = EquipeForm()
+    return render(request, 'equipes/cria_equipes.html', {'form': form})
 
-    nome = request.POST.get('nome')
-    if not nome:
-        return JsonResponse({'erro': 'O nome da equipe é obrigatório'}, status=400)
 
+## 3. Adicionar usuario na equipe (somente gestor)
+@login_required  
+def adicionar_profissional(request, equipe_id):
     try:
-        equipe = Equipe.criar_equipe(nome, request.user)
-        return JsonResponse({'mensagem': 'Equipe criada com sucesso', 'equipe_id': equipe.id})
-    except ValidationError as e:
-        return JsonResponse({'erro': str(e)}, status=400)
+        equipe = Equipe.objects.get(id=equipe_id)  # Busca a equipe pelo ID
+    except Equipe.DoesNotExist:
+        messages.error(request, "Equipe não encontrada.")  
+        return redirect('home_equipes')  
 
-# Adicionar/remover profissional (gestor)
-@login_required
-def equipes_editar(request, equipe_id):
-    if request.method != 'POST':
-        return JsonResponse({'erro': 'Use método POST com "acao" e "username".'}, status=400)
+    # Verifica se o usuário logado é o gestor da equipe
+    if request.user != equipe.gestor:
+        messages.error(request, "Apenas o gestor pode adicionar profissionais.")
+        return redirect('home_equipes')  
 
-    equipe = get_object_or_404(Equipe, id=equipe_id)
+    if request.method == 'POST':
+        form = EditarEquipeForm(request.POST)  
+        if form.is_valid():  
+            username = form.cleaned_data['username']  # Pega o nome de usuário enviado
+
+            try:
+                profissional = User.objects.get(username=username)  # Busca o usuário
+                equipe.profissionais.add(profissional)  
+                messages.success(request, f'{username} adicionado com sucesso!')
+            except User.DoesNotExist:
+                messages.error(request, "Usuário não encontrado.")
+
+            return redirect('equipes_detalhe', equipe_id=equipe.id)  # Volta para os detalhes da equipe
+
+    else:
+        form = EditarEquipeForm()  
+
+    return render(request, 'equipes/adicionar.html', {'form': form, 'equipe': equipe})
+
+## 4. Remover usuario da equipe (somente gestor)
+@login_required  
+def remover_profissional(request, equipe_id):
+    try:
+        equipe = Equipe.objects.get(id=equipe_id)  
+    except Equipe.DoesNotExist:
+        messages.error(request, "Equipe não encontrada.")
+        return redirect('home_equipes')  
 
     if request.user != equipe.gestor:
-        return HttpResponseForbidden("Apenas o gestor pode editar esta equipe.")
+        messages.error(request, "Apenas o gestor pode remover profissionais.")
+        return redirect('home_equipes') 
 
-    acao = request.POST.get('acao')
-    username = request.POST.get('username')
+    
+    if request.method == 'POST':
+        form = EditarEquipeForm(request.POST) 
+        if form.is_valid(): 
+            username = form.cleaned_data['username']  
 
-    if not username or not acao:
-        return JsonResponse({'erro': 'Campos "username" e "acao" são obrigatórios'}, status=400)
+            try:
+                profissional = User.objects.get(username=username)  
+                equipe.profissionais.remove(profissional)  
+                messages.success(request, f'{username} removido com sucesso!')
+            except User.DoesNotExist:
+                messages.error(request, "Usuário não encontrado.")
 
-    try:
-        profissional = User.objects.get(username=username)
+            return redirect('equipes_detalhe', equipe_id=equipe.id)  
 
-        if acao == 'adicionar':
-            equipe.adicionar_profissional(profissional)
-        elif acao == 'remover':
-            equipe.remover_profissional(profissional)
-        else:
-            return JsonResponse({'erro': 'Ação inválida. Use "adicionar" ou "remover".'}, status=400)
+    else:
+        form = EditarEquipeForm()  
 
-        return JsonResponse({'mensagem': f'Profissional {acao} com sucesso'})
+   
+    return render(request, 'equipes/remover.html', {'form': form, 'equipe': equipe})
 
-    except User.DoesNotExist:
-        return JsonResponse({'erro': 'Usuário não encontrado.'}, status=404)
-    except ValidationError as e:
-        return JsonResponse({'erro': str(e)}, status=400)
-
-# Ver detalhes da equipe
+## 5. Detalhes da equipe (somente gestor ou membros)
 @login_required
 def equipes_detalhe(request, equipe_id):
-    equipe = get_object_or_404(Equipe, id=equipe_id)
-    
+    try:
+        equipe = Equipe.objects.get(id=equipe_id)
+    except Equipe.DoesNotExist:
+        messages.error(request, "Equipe não encontrada.")
+        return redirect('home_equipes')
+
     if request.user != equipe.gestor and request.user not in equipe.profissionais.all():
-        return HttpResponseForbidden("Você não pertence a esta equipe.")
+        messages.error(request, "Você não tem permissão para ver esta equipe.")
+        return redirect('home_equipes')
 
-    profissionais = equipe.profissionais.all().values('username', 'first_name', 'last_name')
-
-    return JsonResponse({
-        'equipe': {
-            'id': equipe.id,
-            'nome': equipe.nome,
-            'gestor': equipe.gestor.username,
-            'profissionais': list(profissionais)
-        }
-    })
+    return render(request, 'equipes/detalhe.html', {'equipe': equipe})

@@ -21,12 +21,16 @@ from rest_framework import routers
 from accounts.api_views import UserProfileView, RegistrationAPIView
 from dashboard.api_views import DadosMensaisRegiaoView, RegiaoView
 from rest_framework.authtoken import views as authtoken_views
+from equipes.api_views import EquipeViewSet, EquipeCreateAPIView
+
 
 ## Routers para API e troca de dados, com todos o serializers dos apps.
 router = routers.DefaultRouter()
 router.register(r'profiles', UserProfileView) 
 router.register(r'regioes', RegiaoView) 
 router.register(r'dados_mensais_regiao', DadosMensaisRegiaoView) 
+router.register(r'equipes', EquipeViewSet)
+
 
 urlpatterns = [
     ## admin - Accounts(Registros e logins) - dashboard
@@ -34,6 +38,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')), # Suas URLs de login/registro
     path('dashboard/', include('dashboard.urls')), # Suas URLs de dashboards
     path ('equipes/', include('equipes.urls')),
+
+    path('api/equipes/criar/', EquipeCreateAPIView.as_view(), name='api_equipe_criar'),
 
     # URLs da API REST Framework
     path('api/', include(router.urls)), # Inclui todas as URLs geradas pelo router, que tá lá em cima

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cadastrar Equipe</title>
+</head>
+<body>
+    <h1>Nova Equipe</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Criar</button>
+    </form>
+    <a href="{% url 'equipes_home' %}">Voltar</a>
+</body>
+</html>
