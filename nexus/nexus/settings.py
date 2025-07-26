@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "dashboard",
     "accounts",
     "equipes",
+    "boletins",
 
     "rest_framework",
     "rest_framework.authtoken",
