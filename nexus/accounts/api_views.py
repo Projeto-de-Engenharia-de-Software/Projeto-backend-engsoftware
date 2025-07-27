@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from .models import Profile
-from .serializers import ProfileSerializer, UserRegistrationSerializer, UserUpdateSerializer
+from .serializers import ProfileSerializer, UserRegistrationSerializer, UserUpdateSerializer, ChangePasswordSerializer 
 
 # Obtém o modelo de usuário ativo (User padrão)
 User = get_user_model() 
@@ -62,5 +62,49 @@ class UserDeleteAPIView(generics.DestroyAPIView):
         self.perform_destroy(instance)
         return Response({"message": "Usuário removido com sucesso."}, status=status.HTTP_204_NO_CONTENT)
     
+class ChangePasswordView(generics.UpdateAPIView):
+    """
+    Uma View para alteração de senha para usuários autenticados.
+    Recebe senha antiga, nova senha e confirmação da nova senha.
+    """
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated] # Garante que apenas usuários logados podem acessar
 
+    def get_object(self):
+        """
+        Retorna o objeto usuário logado que será atualizado.
+        """
+        return self.request.user # Isso garante que o usuário só pode alterar a própria senha
+
+    def update(self, request, *args, **kwargs):
+        self.object = self.get_object() # Obtém o usuário logado
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            # **Primeiro, verifica se a senha antiga fornecida é correta**
+            if not self.object.check_password(serializer.data.get("old_password")):
+                return Response(
+                    {"old_password": ["Senha antiga incorreta."]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Se a senha antiga estiver correta, define a nova senha
+            self.object.set_password(serializer.data.get("new_password"))
+            self.object.save()
+            
+            # Opcional: Invalide o token atual do usuário por segurança (se estiver usando Token Authentication)
+            # from rest_framework.authtoken.models import Token
+            # Token.objects.filter(user=self.object).delete()
+            # return Response({"detail": "Senha alterada com sucesso! Você precisa fazer login novamente."}, status=status.HTTP_200_OK)
+
+
+            response_data = {
+                'status': 'success',
+                'code': status.HTTP_200_OK,
+                'message': 'Senha alterada com sucesso!',
+                'data': []
+            }
+            return Response(response_data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Profile
 
 User = get_user_model() 
@@ -144,3 +146,24 @@ class UserUpdateSerializer(serializers.Serializer):
 
         return instance
 
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, style={'input_type': 'password'})
+    new_password = serializers.CharField(required=True, style={'input_type': 'password'})
+    confirm_new_password = serializers.CharField(required=True, style={'input_type': 'password'})
+
+    def validate(self, data):
+        """
+        Valida que a nova senha e a confirmação são iguais e atende aos requisitos de segurança.
+        """
+        if data['new_password'] != data['confirm_new_password']:
+            raise serializers.ValidationError({"new_password": "As novas senhas não coincidem."})
+
+        # Valida a complexidade da senha usando os validadores do Django
+        # O self.context['request'].user garante que as regras específicas do usuário sejam aplicadas,
+        # como não usar parte do username na senha, se configurado.
+        try:
+            validate_password(data['new_password'], self.context['request'].user)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"new_password": list(e.messages)}) # `list(e.messages)` para formatar melhor
+        
+        return data
