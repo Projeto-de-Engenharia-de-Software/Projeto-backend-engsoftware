@@ -1,7 +1,9 @@
 import csv
+import os
 import pandas as pd
 import requests
 from django.core.management.base import BaseCommand
+from django.conf import settings
 from django.db import transaction
 from dashboard.models import RegistroViolencia
 from datetime import datetime
@@ -94,8 +96,8 @@ class Command(BaseCommand):
 
     ## Função principal que gera tudo e passa
     def handle(self, *args, **kwargs):
-        caminho_arquivo = r'C:\\Users\\Wellington Viana\\eng-software\\Projeto-backend-engsoftware\\nexus\\database\\VIOLBR14_filtrado.csv'
-        self.stdout.write(self.style.NOTICE(f'Iniciando a importação do arquivo "{caminho_arquivo}"...'))
+        csv_file_path = os.path.join(settings.BASE_DIR, 'database', 'VIOLBR14_filtrado.csv')
+        self.stdout.write(self.style.NOTICE(f'Iniciando a importação do arquivo "{csv_file_path}"...'))
 
         line_num = 1
         registros_para_criar = []
@@ -116,7 +118,7 @@ class Command(BaseCommand):
             for m in todos_municipios if str(m['id']).startswith('26')
             }
 
-            with open(caminho_arquivo, mode='r', encoding='utf-8') as file:
+            with open(csv_file_path, mode='r', encoding='utf-8') as file:
                 reader = csv.DictReader(file)
 
                 for row in reader:
@@ -210,6 +212,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'Importação concluída! Total de linhas no arquivo: {line_num - 1}.'))
 
         except FileNotFoundError:
-            self.stdout.write(self.style.ERROR(f'Arquivo "{caminho_arquivo}" não encontrado. Verifique o caminho.'))
+            self.stdout.write(self.style.ERROR(f'Arquivo "{csv_file_path}" não encontrado. Verifique o caminho.'))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'Ocorreu um erro inesperado na linha {line_num} ou durante o salvamento. Detalhes: {e}'))

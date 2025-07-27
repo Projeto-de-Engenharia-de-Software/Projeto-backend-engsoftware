@@ -64,7 +64,7 @@ class EquipeViewSet(viewsets.ModelViewSet):
 
         try:
             # com as validações do modelo, removendo a equipe
-            Equipe.remover_equipe(equipe_id=equipe.id, usuario_solicitante=request.user)
+            Equipe.remover_equipe(nome=equipe.nome, gestor=request.user)
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ValidationError as e:
             # Caso o método do modelo tenha alguma outra validação que falhe
