@@ -27,7 +27,6 @@ router = routers.DefaultRouter()
 router.register(r'profiles', UserProfileAPIView, basename='profile')
 router.register(r'registro-violencia', RegistroViolenciaViewSet, basename='registro-violencia')
 router.register(r'equipes', EquipeViewSet, basename='equipe')
-router.regst(r'boletins', BoletimViewSet, basename='boletim')
 
 urlpatterns = [
     ## admin - Accounts(Registros e logins) - dashboard
@@ -35,7 +34,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')), 
     path('dashboard/', include('dashboard.urls')), 
     path ('equipes/', include('equipes.urls')),
-    path ('boletins/', include('boletins.urls')),
+    path ('api/boletins/', include('boletins.urls')),
 
     # URLs da API REST Framework
     path('api/', include(router.urls)), # Inclui todas as URLs geradas pelo router, que tá lá em cima

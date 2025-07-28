@@ -29,7 +29,7 @@ class RegistroViolenciaViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
 
         if user.profile.perfil == 'gestor' or user.profile.perfil == 'profissional':
-            return RegistroViolencia.objects.all().order_by('-NU_ANO')
+            return RegistroViolencia.objects.all().order_by('-DT_OCOR')
 
         return RegistroViolencia.objects.none()
     
