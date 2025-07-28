@@ -29,4 +29,15 @@ class BoletimCreateSerializer(serializers.Serializer):
             gestor=user
         )
 
+class BoletimUpdateSerializer(serializers.ModelSerializer):
+    anotacoes = serializers.CharField(allow_blank=True, required=False)
+
+    class Meta:
+        model = Boletim
+        fields = ['anotacoes']
+
+    def update(self, instance, validated_data):
+        instance.anotacoes = validated_data.get('anotacoes', instance.anotacoes)
+        instance.save()
+        return instance
 
