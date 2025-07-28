@@ -27,6 +27,7 @@ router = routers.DefaultRouter()
 router.register(r'profiles', UserProfileAPIView, basename='profile')
 router.register(r'registro-violencia', RegistroViolenciaViewSet, basename='registro-violencia')
 router.register(r'equipes', EquipeViewSet, basename='equipe')
+router.regst(r'boletins', BoletimViewSet, basename='boletim')
 
 urlpatterns = [
     ## admin - Accounts(Registros e logins) - dashboard
